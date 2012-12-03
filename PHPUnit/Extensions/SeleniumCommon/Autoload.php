@@ -84,6 +84,7 @@ spl_autoload_register(
             'phpunit_extensions_selenium2testcase_sessioncommand_location' => '/Extensions/Selenium2TestCase/SessionCommand/Location.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_moveto' => '/Extensions/Selenium2TestCase/SessionCommand/MoveTo.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_orientation' => '/Extensions/Selenium2TestCase/SessionCommand/Orientation.php',
+            'phpunit_extensions_selenium2testcase_sessioncommand_file' => '/Extensions/Selenium2TestCase/SessionCommand/File.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_url' => '/Extensions/Selenium2TestCase/SessionCommand/Url.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_window' => '/Extensions/Selenium2TestCase/SessionCommand/Window.php',
             'phpunit_extensions_selenium2testcase_sessionstrategy' => '/Extensions/Selenium2TestCase/SessionStrategy.php',

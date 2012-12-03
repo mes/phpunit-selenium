@@ -68,6 +68,7 @@
  * @method string windowHandle() Retrieves the current window handle
  * @method string windowHandles() Retrieves a list of all available window handles
  * @method string keys() Send a sequence of key strokes to the active element.
+ * @method string file($localPath) Uploads a file to the remote server and returns the location on the remote server. The remote path may then be used as the value of a file input field.
  */
 class PHPUnit_Extensions_Selenium2TestCase_Session
     extends PHPUnit_Extensions_Selenium2TestCase_CommandsHolder
@@ -138,7 +139,8 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
             'touchScroll' => $this->touchCommandFactoryMethod('touch/scroll'),
             'flick' => $this->touchCommandFactoryMethod('touch/flick'),
             'location' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Location',
-            'orientation' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Orientation'
+            'orientation' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Orientation',
+            'file' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_File'
         );
     }
 

@@ -941,4 +941,10 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertEquals('Test open', $this->title());
         $this->assertStringEndsWith('html/test_open.html', strstr($this->url(), 'html/'));
     }
+    
+    public function testFileUpload()
+    {
+        $filePath = $this->file(__FILE__);
+        $this->assertNotEmpty($filePath);
+    }    
 }
