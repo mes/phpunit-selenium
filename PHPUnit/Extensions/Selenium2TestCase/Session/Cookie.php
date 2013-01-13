@@ -92,6 +92,21 @@ class PHPUnit_Extensions_Selenium2TestCase_Session_Cookie
 
     /**
      * @param string $name
+     * @return Array
+     */
+    public function getDetailed($name)
+    {
+        $cookies = $this->driver->curl('GET', $this->url)->getValue();
+        foreach ($cookies as $cookie) {
+            if ($cookie['name'] == $name) {
+                return $cookie;
+            }
+        }
+        throw new PHPUnit_Extensions_Selenium2TestCase_Exception("There is no '$name' cookie available on this page.");
+    }
+
+    /**
+     * @param string $name
      * @return void
      */
     public function remove($name)
