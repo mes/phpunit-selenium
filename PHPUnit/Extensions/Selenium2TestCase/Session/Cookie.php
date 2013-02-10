@@ -79,6 +79,20 @@ class PHPUnit_Extensions_Selenium2TestCase_Session_Cookie
      * @param string $name
      * @return string
      */
+    public function names()
+    {
+        $cookies = $this->driver->curl('GET', $this->url)->getValue();
+        $names = array();
+        foreach ($cookies as $cookie) {
+            $names[] = $cookie['name'];
+        }        
+        return $names;
+    }
+    
+    /**
+     * @param string $name
+     * @return string
+     */
     public function get($name)
     {
         $cookies = $this->driver->curl('GET', $this->url)->getValue();
