@@ -70,7 +70,8 @@ class PHPUnit_Extensions_Selenium2TestCase_Driver
         $response = $this->curl('POST', $sessionCreation, array(
             'desiredCapabilities' => $desiredCapabilities
         ));
-        $sessionPrefix = $response->getURL();
+        $responseValues = $response->getValue();
+        $sessionPrefix = $sessionCreation->descend("/" . $responseValues["webdriver.remote.sessionid"]);
 
         $timeouts = new PHPUnit_Extensions_Selenium2TestCase_Session_Timeouts(
             $this,
