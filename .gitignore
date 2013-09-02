@@ -5,3 +5,13 @@ build/logs
 build/pdepend
 phpunit.xml
 Tests/Selenium2TestCase/Coverage/*.dummyTestId
+.idea/scopes
+.idea
+.idea/.name
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/phpunit-selenium.iml
+.idea/scopes/scope_settings.xml
+.idea/vcs.xml
+.idea/workspace.xml
