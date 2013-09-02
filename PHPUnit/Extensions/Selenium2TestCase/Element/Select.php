@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.2
@@ -47,7 +47,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
@@ -69,7 +69,11 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
      */
     public function selectedLabel()
     {
-        return $this->selectedOption()->text();
+        $selectedOption = $this->selectedOption();
+        if ($selectedOption === null) {
+            return '';
+        }
+        return $selectedOption->text();
     }
 
     /**
@@ -77,7 +81,11 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
      */
     public function selectedValue()
     {
-        return $this->selectedOption()->value();
+        $selectedOption = $this->selectedOption();
+        if ($selectedOption === null) {
+            return '';
+        }
+        return $selectedOption->value();
     }
 
     /**
@@ -85,7 +93,11 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
      */
     public function selectedId()
     {
-        return $this->selectedOption()->attribute('id');
+        $selectedOption = $this->selectedOption();
+        if ($selectedOption === null) {
+            return '';
+        }
+        return $selectedOption->attribute('id');
     }
 
     /**
@@ -130,7 +142,7 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
      */
     public function selectOptionByLabel($label)
     {
-        $toSelect = $this->criteria('xpath')->value(".//option[.='$label']");
+        $toSelect = $this->using('xpath')->value(".//option[.='$label']");
         $this->selectOptionByCriteria($toSelect);
     }
 
@@ -140,7 +152,7 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
      */
     public function selectOptionByValue($value)
     {
-        $toSelect = $this->criteria('xpath')->value(".//option[@value='$value']");
+        $toSelect = $this->using('xpath')->value(".//option[@value='$value']");
         $this->selectOptionByCriteria($toSelect);
     }
 
@@ -208,11 +220,12 @@ class PHPUnit_Extensions_Selenium2TestCase_Element_Select
                 return $option;
             }
         }
+        return null;
     }
 
     private function options()
     {
-        $onlyTheOptions = $this->criteria('css selector')->value('option');
+        $onlyTheOptions = $this->using('css selector')->value('option');
         return $this->elements($onlyTheOptions);
     }
 }

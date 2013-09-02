@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.0
@@ -47,7 +47,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
@@ -60,7 +60,6 @@
  * @method bool enabled() Checks a form element's state
  * @method bool equals(PHPUnit_Extensions_Selenium2TestCase_Element $another) Checks if the two elements are the same on the page
  * @method array location() Retrieves the element's position in the page: keys 'x' and 'y' in the returned array
- * @method string name() Retrieves the tag name
  * @method bool selected() Checks the state of an option or other form element
  * @method array size() Retrieves the dimensions of the element: 'width' and 'height' of the returned array
  * @method void submit() Submits a form; can be called on its children
@@ -68,8 +67,24 @@
  * @method string text() Get content of ordinary elements
  */
 class PHPUnit_Extensions_Selenium2TestCase_Element
-    extends PHPUnit_Extensions_Selenium2TestCase_CommandsHolder
+    extends PHPUnit_Extensions_Selenium2TestCase_Element_Accessor
 {
+    /**
+     * @return \self
+     * @throws InvalidArgumentException
+     */
+    public static function fromResponseValue(
+            array $value,
+            PHPUnit_Extensions_Selenium2TestCase_URL $parentFolder,
+            PHPUnit_Extensions_Selenium2TestCase_Driver $driver)
+    {
+        if (!isset($value['ELEMENT'])) {
+            throw new InvalidArgumentException('Element not found.');
+        }
+        $url = $parentFolder->descend($value['ELEMENT']);
+        return new self($driver, $url);
+    }
+
     /**
      * @return integer
      */
@@ -106,9 +121,14 @@ class PHPUnit_Extensions_Selenium2TestCase_Element
         );
     }
 
+    protected function getSessionUrl()
+    {
+        return $this->url->ascend()->ascend();
+    }
+
     private function touchCommandFactoryMethod($urlSegment)
     {
-        $url = $this->sessionUrl()->addCommand($urlSegment);
+        $url = $this->getSessionUrl()->addCommand($urlSegment);
         $self = $this;
         return function ($jsonParameters, $commandUrl) use ($url, $self) {
             if ((is_array($jsonParameters) &&
@@ -120,47 +140,22 @@ class PHPUnit_Extensions_Selenium2TestCase_Element
         };
     }
 
-    private function sessionUrl()
+    /**
+     * Retrieves the tag name
+     * @return string
+     */
+    public function name()
     {
-        return $this->url->ascend()->ascend();
+        return strtolower(parent::name());
     }
 
     /**
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
+     * Generates an array that is structured as the WebDriver Object of the JSONWireProtocoll
+     *
+     * @return array
      */
-    public function element(PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria)
+    public function toWebDriverObject()
     {
-        $value = $this->postCommand('element', $criteria);
-        return self::fromResponseValue($value, $this->url->ascend(), $this->driver);
-    }
-
-    /**
-     * @return array    instances of PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function elements(PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria)
-    {
-        $values = $this->postCommand('elements', $criteria);
-        $elements = array();
-        foreach ($values as $value) {
-            $elements[] = self::fromResponseValue($value, $this->url->ascend(), $this->driver);
-        }
-        return $elements;
-    }
-
-    public static function fromResponseValue(array $value, PHPUnit_Extensions_Selenium2TestCase_URL $parentFolder, PHPUnit_Extensions_Selenium2TestCase_Driver $driver)
-    {
-        if (!isset($value['ELEMENT'])) {
-            throw new InvalidArgumentException('Element not found.');
-        }
-        $url = $parentFolder->descend($value['ELEMENT']);
-        return new self($driver, $url);
-    }
-
-    /**
-     * @return PHPUnit_Extensions_Selenium2TestCase_ElementCriteria
-     */
-    protected function criteria($using)
-    {
-        return new PHPUnit_Extensions_Selenium2TestCase_ElementCriteria($using);
+        return array('ELEMENT' => (string)$this->getId());
     }
 }

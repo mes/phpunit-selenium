@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,71 +35,112 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    PHPUnit_Selenium
- * @author     Christian Becker <chris@beckr.org>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @author     Giorgio Sironi <info@giorgiosironi.com>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
+ * @since      File available since Release 1.3.2
  */
 
 /**
- * Uploads a file to the remote server and returns the location on the remote server. The remote path may then be used as the value of a file input field.
+ * Sends a file to a RC
+ * Returns the FQ path to the transfered file
  *
  * @package    PHPUnit_Selenium
- * @author     Christian Becker <chris@beckr.org>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @author     Kevin Ran  <heilong24@gmail.com>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
- * @since      
+ * @since      Class available since Release 1.3.2
  */
 class PHPUnit_Extensions_Selenium2TestCase_SessionCommand_File
-        extends PHPUnit_Extensions_Selenium2TestCase_Command
+    extends PHPUnit_Extensions_Selenium2TestCase_Command
+{
+
+    /**
+     * @var
+     */
+    private static $_zipArchive;
+
+    public function __construct($argument, PHPUnit_Extensions_Selenium2TestCase_URL $url)
     {
-        public function __construct($argument, PHPUnit_Extensions_Selenium2TestCase_URL $url)
-        {
-            if (is_string($argument)) {
-                $jsonParameters = $this->prepareFile($argument);
-            } else if ($argument == NULL) {
-                $jsonParameters = NULL;
-            } else {
-                throw new BadMethodCallException('Wrong parameters for file().');
-            }
-            parent::__construct($jsonParameters, $url);
+        if (!is_file($argument)) {
+            throw new BadMethodCallException("No such file: {$argument}");
         }
 
-        /**
-         * @return string
-         */
-        public function httpMethod()
-        {
-            return 'POST';
+        $zipfile_path = $this->_zipArchiveFile($argument);
+        $contents     = file_get_contents($zipfile_path);
+
+        if ($contents === false) {
+            throw new Exception("Unable to read generated zip file: {$zipfile_path}");
         }
 
-        /**
-         * Prepare file for upload
-         *
-         * @param string $filePath
-         * @throws RuntimeException
-         * @return array
-         */
-        protected function prepareFile($filePath)
-        {
-            $success = true;
-            $params = array();
-            $zipArchive = new ZipArchive();
-            $tempFile = tempnam(sys_get_temp_dir(), "zip");
-            $success &= (TRUE === $zipArchive->open($tempFile, ZIPARCHIVE::CREATE));
-            $success &= $zipArchive->addFile($filePath, basename($filePath));
-            $success &= $zipArchive->close();
-            $success &= (FALSE !== ($file_contents = file_get_contents($tempFile)));
-            if ($success) {
-                $params = array('file' => base64_encode($file_contents));
-            }
-            $success &= unlink($tempFile);
-            
-            if (!$success) {
-                throw new RuntimeException('Unable to add ' . $filePath . ' to temporary ZIP archive at ' . $tempFile);
-            }
-            return $params;
-        }
+        $file = base64_encode($contents);
+
+        parent::__construct(array('file' => $file), $url);
+
+        unlink($zipfile_path);
     }
+
+    public function httpMethod()
+    {
+        return 'POST';
+    }
+
+    /**
+     * Creates a zip archive with the given file
+     *
+     * @param   string $file_path   FQ path to file
+     * @return  string              Generated zip file
+     */
+    protected function _zipArchiveFile( $file_path ) {
+
+        // file MUST be readable
+        if( !is_readable( $file_path ) ) {
+
+            throw new Exception( "Unable to read {$file_path}" );
+
+        } // if !file_data
+
+        $filename_hash  = sha1( time().$file_path );
+        $tmp_dir        = $this->_getTmpDir();
+        $zip_filename   = "{$tmp_dir}{$filename_hash}.zip";
+        $zip            = $this->_getZipArchiver();
+
+        if ($zip->open($zip_filename, ZIPARCHIVE::CREATE) === false) {
+            throw new Exception( "Unable to create zip archive: {$zip_filename}" );
+        }
+
+        $zip->addFile($file_path, basename($file_path));
+        $zip->close();
+
+        return $zip_filename;
+    }
+
+    /**
+     * Returns a runtime instance of a ZipArchive
+     *
+     * @return ZipArchive
+     */
+    protected function _getZipArchiver()
+    {
+        // create ZipArchive if necessary
+        if (!static::$_zipArchive) {
+            static::$_zipArchive = new ZipArchive();
+        }
+
+        return static::$_zipArchive;
+    }
+
+    /**
+     * Calls sys_get_temp_dir and ensures that it has a trailing slash
+     * ( behavior varies across systems )
+     *
+     * @return string
+     */
+    protected function _getTmpDir()
+    {
+        return rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+    }
+}

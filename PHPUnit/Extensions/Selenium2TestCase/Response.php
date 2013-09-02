@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.0
@@ -47,7 +47,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
@@ -83,6 +83,17 @@ class PHPUnit_Extensions_Selenium2TestCase_Response
      */
     public function getURL()
     {
-        return new PHPUnit_Extensions_Selenium2TestCase_URL($this->info['url'].'/'.$this->jsonResponse['sessionId']);
+        $url = $this->info['url'];
+        $sessionId = $this->jsonResponse['sessionId'];
+
+        // if url doesn't have sessionId included - append it manually
+        // this change was performed in selenium v2.34
+        // @see https://code.google.com/p/selenium/issues/detail?id=6089
+        // @see https://github.com/sebastianbergmann/phpunit-selenium/issues/265
+        if (strpos($url, $sessionId) === false) {
+            $url .= '/' . $sessionId;
+        }
+
+        return new PHPUnit_Extensions_Selenium2TestCase_URL($url);
     }
 }

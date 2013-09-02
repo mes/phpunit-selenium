@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,17 +36,19 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  */
 
+use PHPUnit_Extensions_Selenium2TestCase_Keys as Keys;
+
 /**
- * Tests for PHPUnit_Extensions_SeleniumTestCase.
+ * Tests for PHPUnit_Extensions_Selenium2TestCase.
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  */
@@ -95,6 +97,28 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertEquals('Other div', $elements[0]->text());
     }
 
+    public function testElementFromResponseValue()
+    {
+        $this->url('html/test_open.html');
+        $elementArray = $this->execute(array(
+            'script' => 'return document.body;',
+            'args' => array(),
+        ));
+        $element = $this->elementFromResponseValue($elementArray);
+        $this->assertEquals('This is a test of the open command.', $element->text());
+    }
+
+    public function testSelectOptionsInMultiselect()
+    {
+        $this->url('html/test_multiselect.html');
+        $this->select($this->byId('theSelect'))->selectOptionByValue("option1");
+        $selectedOptions = $this->select($this->byId('theSelect'))->selectedLabels();
+        $this->assertEquals(array('First Option','Second Option'), $selectedOptions);
+        $this->select($this->byId('theSelect'))->selectOptionByLabel("Fourth Option");
+        $selectedOptions = $this->select($this->byId('theSelect'))->selectedLabels();
+        $this->assertEquals(array('First Option','Second Option','Fourth Option'), $selectedOptions);
+    }
+
     public function testClearMultiselectSelectedOptions()
     {
         $this->url('html/test_multiselect.html');
@@ -132,24 +156,40 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertEquals(2, count($rows));
     }
 
-    public function testShortenedApiForSelectionOfElement()
+    /**
+     * Test on Session and Element
+     *
+     * @dataProvider getObjectsWithAccessToElement
+     */
+    public function testShortenedApiForSelectionOfElement($factory)
     {
         $this->url('html/test_element_selection.html');
+        $parent = $factory($this);
 
-        $element = $this->byClassName('theDivClass');
+        $element = $parent->byClassName('theDivClass');
         $this->assertEquals('The right div', $element->text());
 
-        $element = $this->byCssSelector('div.theDivClass');
+        $element = $parent->byCssSelector('div.theDivClass');
         $this->assertEquals('The right div', $element->text());
 
-        $element = $this->byId('theDivId');
+        $element = $parent->byId('theDivId');
         $this->assertEquals('The right div', $element->text());
 
-        $element = $this->byName('theDivName');
+        $element = $parent->byName('theDivName');
         $this->assertEquals('The right div', $element->text());
 
-        $element = $this->byXPath('//div[@id]');
+        $element = $parent->byTag('div');
+        $this->assertEquals('Other div', $element->text());
+
+        $element = $parent->byXPath('//div[@id]');
         $this->assertEquals('The right div', $element->text());
+    }
+
+    public function getObjectsWithAccessToElement() {
+        return array(
+            array(function($s) { return $s; }),
+            array(function($s) { return $s->byXPath('//body'); })
+        );
     }
 
     public function testElementsKnowTheirTagName()
@@ -239,10 +279,30 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertEquals('Click Page 1', $this->title());
     }
 
+    public function testDoubleclick()
+    {
+        $this->url('html/test_doubleclick.html');
+        $link = $this->byId('link');
+
+        $this->moveto($link);
+        $this->doubleclick();
+
+        $this->assertEquals('doubleclicked', $this->alertText());
+        $this->acceptAlert();
+    }
+
     public function testByLinkText()
     {
         $this->url('html/test_click_page1.html');
         $link = $this->byLinkText('Click here for next page');
+        $link->click();
+        $this->assertEquals('Click Page Target', $this->title());
+    }
+
+    public function testByPartialLinkText()
+    {
+        $this->url('html/test_click_page1.html');
+        $link = $this->byPartialLinkText('next page');
         $link->click();
         $this->assertEquals('Click Page Target', $this->title());
     }
@@ -332,7 +392,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $usernameInput->clear();
         $this->assertEquals('', $usernameInput->value());
     }
-    
+
     public function testTypingNonLatinText()
     {
         $this->url('html/test_type_page1.html');
@@ -358,7 +418,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
     {
         $this->url('html/test_select.html');
         $select = $this->select($this->byCssSelector('select'));
-        
+
         // basic
         $this->assertEquals('Second Option', $select->selectedLabel());
         $this->assertEquals('option2', $select->selectedValue());
@@ -504,7 +564,8 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
     {
         $this->url('html/test_form_events.html');
         $eventLog = $this->byId('eventlog');
-        $this->assertEquals('', $eventLog->value());
+        $eventLog->clear();
+
         $this->clickOnElement('theLink');
         $this->assertEquals('link clicked', $this->alertText());
         $this->acceptAlert();
@@ -515,7 +576,8 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
     {
         $this->url('html/test_form_events.html');
         $eventLog = $this->byId('eventlog');
-        $this->assertEquals('', $eventLog->value());
+        $eventLog->clear();
+
         $this->clickOnElement('theButton');
         $this->assertContains('{focus(theButton)}', $eventLog->value());
         $this->assertContains('{click(theButton)}', $eventLog->value());
@@ -530,8 +592,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->url('html/test_form_events.html');
         $select = $this->select($this->byId('theSelect'));
         $eventLog = $this->byId('eventlog');
-        $this->assertEquals('', $select->selectedValue());
-        $this->assertEquals('', $eventLog->value());
+        $eventLog->clear();
 
         $select->selectOptionByLabel('First Option');
         $this->assertEquals('option1', $select->selectedValue());
@@ -543,7 +604,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertEquals('option1', $select->selectedValue());
         $this->assertEquals('', $eventLog->value());
     }
-    
+
     public function testRadioEventsAreGenerated()
     {
         $this->markTestIncomplete("Flaky: fails on focus in some browsers.");
@@ -607,10 +668,10 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->clickOnElement('theTextbox');
         $this->clickOnElement('theButton');
         $eventLog = $this->byId('eventlog');
-        $this->assertContains('{mouseover(theTextbox)}', $eventLog->value()); 
-        $this->assertContains('{mousedown(theButton)}', $eventLog->value()); 
-        $this->assertContains('{mouseover(theTextbox)}', $eventLog->value()); 
-        $this->assertContains('{mousedown(theButton)}', $eventLog->value()); 
+        $this->assertContains('{mouseover(theTextbox)}', $eventLog->value());
+        $this->assertContains('{mousedown(theButton)}', $eventLog->value());
+        $this->assertContains('{mouseover(theTextbox)}', $eventLog->value());
+        $this->assertContains('{mousedown(theButton)}', $eventLog->value());
     }
 
     public function testKeyEventsAreGenerated()
@@ -621,7 +682,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->assertContains('{focus(theTextbox)}'
                            . ' {keydown(theTextbox - 84)}'
                            . ' {keypress(theTextbox)}'
-                           . ' {keyup(theTextbox - 84)}', 
+                           . ' {keyup(theTextbox - 84)}',
                                $this->byId('eventlog')->value());
     }
 
@@ -732,10 +793,41 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         $this->ime()->activate();
     }
 
-    public function testDifferentFramesFromTheMainOneCanGetFocus()
+    public function testDifferentFramesFromTheMainOneCanGetFocusById()
     {
         $this->url('html/test_frames.html');
         $this->frame('my_iframe_id');
+        $this->assertEquals('This is a test of the open command.', $this->byCssSelector('body')->text());
+
+        $this->frame(null);
+        $this->assertContains('This page contains frames.', $this->byCssSelector('body')->text());
+    }
+
+    public function testDifferentFramesFromTheMainOneCanGetFocusByFrameCount()
+    {
+        $this->url('html/test_frames.html');
+        $this->frame(0);
+        $this->assertEquals('This is a test of the open command.', $this->byCssSelector('body')->text());
+
+        $this->frame(null);
+        $this->assertContains('This page contains frames.', $this->byCssSelector('body')->text());
+    }
+
+    public function testDifferentFramesFromTheMainOneCanGetFocusByName()
+    {
+        $this->url('html/test_frames.html');
+        $this->frame('my_iframe_name');
+        $this->assertEquals('This is a test of the open command.', $this->byCssSelector('body')->text());
+
+        $this->frame(null);
+        $this->assertContains('This page contains frames.', $this->byCssSelector('body')->text());
+    }
+
+    public function testDifferentFramesFromTheMainOneCanGetFocusByElement()
+    {
+        $this->url('html/test_frames.html');
+        $frame = $this->byId('my_iframe_id');
+        $this->frame($frame);
         $this->assertEquals('This is a test of the open command.', $this->byCssSelector('body')->text());
 
         $this->frame(null);
@@ -842,7 +934,7 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
             $this->cookie()->get($name);
             $this->fail('The cookie shouldn\'t exist anymore.');
         } catch (PHPUnit_Extensions_Selenium2TestCase_Exception $e) {
-            $this->assertEquals("There is no '$name' cookie available on this page.", $e->getMessage()); 
+            $this->assertEquals("There is no '$name' cookie available on this page.", $e->getMessage());
         }
     }
 
@@ -856,29 +948,60 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
 
     public function testTheMouseCanBeMovedToAKnownPosition()
     {
-        $this->markTestIncomplete();
-        $this->moveTo(array(
-            'element' => 'id', // or Element object
-            'xoffset' => 0,
-            'yofsset' => 0
+        // @TODO: remove markTestIncomplete() when the following bugs are fixed
+        // @see https://code.google.com/p/selenium/issues/detail?id=5939
+        // @see https://code.google.com/p/selenium/issues/detail?id=3578
+        $this->markTestIncomplete('This is broken in a firefox driver yet');
+        $this->url('html/test_moveto.html');
+        $this->moveto(array(
+            'element' => $this->byId('moveto'),
+            'xoffset' => 10,
+            'yoffset' => 10,
         ));
-        $this->click();
+        $this->buttondown();
+
+        $deltaX = 42;
+        $deltaY = 11;
+        $this->moveto(array(
+            'xoffset' => $deltaX,
+            'yoffset' => $deltaY,
+        ));
+        $this->buttonup();
+
+        $down = explode(',', $this->byId('down')->text());
+        $up = explode(',', $this->byId('up')->text());
+
+        $this->assertCount(2, $down);
+        $this->assertCount(2, $up);
+        $this->assertEquals($deltaX, $up[0] - $down[0]);
+        $this->assertEquals($deltaY, $up[1] - $down[1]);
     }
 
-    public function testMouseButtonsCanBeHeldAndReleasedOverAnElement()
+    public function testMoveToRequiresElementParamToBeValidElement()
     {
-        $this->url('html/movements.html');
-        $this->moveto($this->byId('to_move'));
-        $this->buttondown();
-        $this->moveto($this->byId('target'));
-        $this->buttonup();
-        $this->markTestIncomplete('Should write something in the input, but while manually drag and drop does work, it doesn\'t with this commands.');
+        $this->url('html/test_moveto.html');
+
+        try {
+            $this->moveto('moveto');
+            $this->fail('A single non-element parameter should cause an exception');
+        } catch (PHPUnit_Extensions_Selenium2TestCase_Exception $e) {
+            $this->assertStringStartsWith('Only moving over an element is supported', $e->getMessage());
+        }
+
+        try {
+            $this->moveto(array(
+                'element' => 'moveto'
+            ));
+            $this->fail('An "element" array parameter with non-element value should cause an exception');
+        } catch (PHPUnit_Extensions_Selenium2TestCase_Exception $e) {
+            $this->assertStringStartsWith('Only moving over an element is supported', $e->getMessage());
+        }
     }
 
     public function testMouseButtonsCanBeClickedMultipleTimes()
     {
         $this->markTestIncomplete();
-        $this->moveTo(array(
+        $this->moveto(array(
             'element' => 'id', // or Element object
             'xoffset' => 0,
             'yofsset' => 0
@@ -959,4 +1082,79 @@ class Extensions_Selenium2TestCaseTest extends Tests_Selenium2TestCase_BaseTestC
         }
         $this->fail('The element shouldn\'t exist.');
     }
+
+    public function testSpecialKeys()
+    {
+        $this->url('html/test_special_keys.html');
+        $this->byId('input')->click();
+
+        $this->keys(Keys::F2);
+        $this->assertEquals('113', $this->byId('check')->text());
+
+        $this->keys(Keys::ALT . Keys::ENTER);
+        $this->assertEquals('14,alt', $this->byId('check')->text());
+
+        // note that modifier keys (alt, control, shift) are sticky
+        // so they are enabled until you explicitly disable it by another call
+        // The above is valid for at least Chrome and Firefox, in IE they are
+        // sticky only within a single keys() method call
+        $this->keys(Keys::CONTROL . Keys::SHIFT . Keys::HOME);
+        $this->assertEquals('36,alt,control,shift', $this->byId('check')->text());
+
+        $this->keys(Keys::ALT . Keys::SHIFT . Keys::NUMPAD7);
+        $this->assertEquals('103,control', $this->byId('check')->text());
+    }
+
+    public function testSessionClick()
+    {
+        $this->url('html/test_mouse_buttons.html');
+        $input = $this->byId('input');
+
+        $this->moveto($input);
+
+        $this->click();
+        $this->assertEquals('0', $this->byId('check')->text());
+
+        $this->click(PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Click::LEFT);
+        $this->assertEquals('0', $this->byId('check')->text());
+
+        // I couldn't get it worked in selenium webdriver 2.28: even though the client (phpunit-selenium) sends
+        // the button: 1 in the request (checked with wireshark) - it still uses left mouse button (0)
+        /*
+        $this->click(PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Click::MIDDLE);
+        $this->assertEquals('1', $this->byId('check')->text());
+        */
+
+        $this->click(PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Click::RIGHT);
+        $this->assertEquals('2', $this->byId('check')->text());
+    }
+
+    /**
+     * @expectedException BadMethodCallException
+     */
+    public function testSessionClickNotScalar()
+    {
+        $this->click(array());
+    }
+
+    /**
+     * @expectedException BadMethodCallException
+     */
+    public function testSessionClickNotAValidValue()
+    {
+        $this->click(3);
+    }
+
+    public function testGetSelectedOptionDataInMultiselect()
+    {
+        $this->url('html/test_multiselect.html');
+        $this->assertSame('Second Option', $this->select($this->byId('theSelect'))->selectedLabel());
+        $this->assertSame('option2', $this->select($this->byId('theSelect'))->selectedValue());
+        $this->assertSame('o2', $this->select($this->byId('theSelect'))->selectedId());
+        $this->select($this->byId('theSelect'))->clearSelectedOptions();
+        $this->assertSame('', $this->select($this->byId('theSelect'))->selectedLabel());
+        $this->assertSame('', $this->select($this->byId('theSelect'))->selectedValue());
+        $this->assertSame('', $this->select($this->byId('theSelect'))->selectedId());
+    }
+>>>>>>> upstream/master
 }

@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.0
@@ -49,43 +49,49 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
  * @since      Class available since Release 1.2.0
  * @method void acceptAlert() Press OK on an alert, or confirms a dialog
- * @method mixed alertText($value = NULL) Gets the alert dialog text, or sets the text for a prompt dialog
+ * @method mixed alertText() alertText($value = NULL) Gets the alert dialog text, or sets the text for a prompt dialog
  * @method void back()
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element byCssSelector($value)
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element byClassName($vaue)
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element byId($value)
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element byName($value)
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element byXPath($value)
- * @method void clickOnElement($id)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byClassName() byClassName($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byCssSelector() byCssSelector($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byId() byId($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byLinkText() byLinkText($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byName() byName($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byTag() byTag($value)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element byXPath() byXPath($value)
+ * @method void click() click(int $button = 0) Click any mouse button (at the coordinates set by the last moveto command).
+ * @method void clickOnElement() clickOnElement($id)
  * @method string currentScreenshot() BLOB of the image file
  * @method void dismissAlert() Press Cancel on an alert, or does not confirm a dialog
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element element(\PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria) Retrieves an element
- * @method array elements(\PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria) Retrieves an array of Element instances
- * @method string execute($javaScriptCode) Injects arbitrary JavaScript in the page and returns the last
- * @method string executeAsync($javaScriptCode) Injects arbitrary JavaScript and wait for the callback (last element of arguments) to be called
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element element() element(\PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria) Retrieves an element
+ * @method array elements() elements(\PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria) Retrieves an array of Element instances
+ * @method string execute() execute($javaScriptCode) Injects arbitrary JavaScript in the page and returns the last
+ * @method string executeAsync() executeAsync($javaScriptCode) Injects arbitrary JavaScript and wait for the callback (last element of arguments) to be called
  * @method void forward()
- * @method void frame($elementId) Changes the focus to a frame in the page
+ * @method void frame() frame(mixed $element) Changes the focus to a frame in the page (by frameCount of type int, htmlId of type string, htmlName of type string or element of type \PHPUnit_Extensions_Selenium2TestCase_Element)
+ * @method void moveto() moveto(\PHPUnit_Extensions_Selenium2TestCase_Element $element) Move the mouse by an offset of the specificed element.
  * @method void refresh()
- * @method \PHPUnit_Extensions_Selenium2TestCase_Element_Select select($element)
+ * @method \PHPUnit_Extensions_Selenium2TestCase_Element_Select select() select($element)
  * @method string source() Returns the HTML source of the page
  * @method \PHPUnit_Extensions_Selenium2TestCase_Session_Timeouts timeouts()
  * @method string title()
- * @method void|string url($url = NULL)
- * @method PHPUnit_Extensions_Selenium2TestCase_ElementCriteria using($strategy) Factory Method for Criteria objects
- * @method void window($name) Changes the focus to another window
+ * @method void|string url() url($url = NULL)
+ * @method PHPUnit_Extensions_Selenium2TestCase_ElementCriteria using() using($strategy) Factory Method for Criteria objects
+ * @method void window() window($name) Changes the focus to another window
  * @method string windowHandle() Retrieves the current window handle
  * @method string windowHandles() Retrieves a list of all available window handles
  * @method string keys() Send a sequence of key strokes to the active element.
+ * @method void closeWindow() Close the current window.
+ * @method void close() Close the current window and clear session data.
  */
 abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_TestCase
 {
-    const VERSION = '1.2.10';
+    const VERSION = '1.3.2';
 
     /**
      * @var string  override to provide code coverage data from the server
@@ -133,6 +139,11 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
     private $collectCodeCoverageInformation;
 
     /**
+     * @var PHPUnit_Extensions_Selenium2TestCase_KeysHolder
+     */
+    private $keysHolder;
+
+    /**
      * @param boolean
      */
     public static function shareSession($shareSession)
@@ -171,6 +182,8 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
             'desiredCapabilities' => array(),
             'seleniumServerRequestsTimeout' => 60
         );
+
+        $this->keysHolder = new PHPUnit_Extensions_Selenium2TestCase_KeysHolder();
     }
 
     public function setupSpecificBrowser($params)
@@ -225,7 +238,6 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
         try {
             if (!$this->session) {
                 $this->session = $this->getStrategy()->session($this->parameters);
-                $this->url('');
             }
         } catch (PHPUnit_Extensions_Selenium2TestCase_NoSeleniumException $e) {
             $this->markTestSkipped("The Selenium Server is not active on host {$this->parameters['host']} at port {$this->parameters['port']}.");
@@ -277,6 +289,7 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
         }
 
         try {
+            $this->setUpPage();
             $result = parent::runTest();
 
             if (!empty($this->verificationErrors)) {
@@ -316,7 +329,7 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
     public function __call($command, $arguments)
     {
         if ($this->session === NULL) {
-            throw new PHPUnit_Extensions_Selenium2TestCase_Exception("There is currently no active session to execute the '$command' command. You're probably trying to set some option in setUp() with an incorrect setter name.");
+            throw new PHPUnit_Extensions_Selenium2TestCase_Exception("There is currently no active session to execute the '$command' command. You're probably trying to set some option in setUp() with an incorrect setter name. You may consider using setUpPage() instead.");
         }
         $result = call_user_func_array(
           array($this->session, $command), $arguments
@@ -446,5 +459,44 @@ abstract class PHPUnit_Extensions_Selenium2TestCase extends PHPUnit_Framework_Te
             return $this->session->id();
 
         return FALSE;
+    }
+
+    /**
+     * Wait until callback isn't null or timeout occurs
+     *
+     * @param $callback
+     * @param null $timeout
+     * @return mixed
+     */
+    public function waitUntil($callback, $timeout = null)
+    {
+        $waitUntil = new PHPUnit_Extensions_Selenium2TestCase_WaitUntil($this);
+        return $waitUntil->run($callback, $timeout);
+    }
+
+    /**
+     * Sends a special key
+     * Deprecated due to issues with IE webdriver. Use keys() method instead
+     * @deprecated
+     * @param string $name
+     * @throws PHPUnit_Extensions_Selenium2TestCase_Exception
+     * @see PHPUnit_Extensions_Selenium2TestCase_KeysHolder
+     */
+    public function keysSpecial($name)
+    {
+        $names = explode(',', $name);
+
+        foreach ($names as $key) {
+            $this->keys($this->keysHolder->specialKey(trim($key)));
+        }
+    }
+
+    /**
+     * setUp method that is called after the session has been prepared.
+     * It is possible to use session-specific commands like url() here.
+     */
+    public function setUpPage()
+    {
+
     }
 }

@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.4
@@ -47,7 +47,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
@@ -58,8 +58,34 @@ class PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Frame
 {
     public function __construct($id, $commandUrl)
     {
-        $jsonParameters = array('id' => $id);
+        $jsonParameters = array(
+            'id' => $this->extractId($id)
+        );
+
         parent::__construct($jsonParameters, $commandUrl);
+    }
+
+    /**
+     * @param $id
+     * @return array
+     */
+    private function extractId($id)
+    {
+        if ($this->isElement($id)) { //selenium-element
+            return $id->toWebDriverObject();
+        }
+
+        //html-id or null
+        return $id;
+    }
+
+    /**
+     * @param $id
+     * @return bool
+     */
+    private function isElement($id)
+    {
+        return $id instanceof PHPUnit_Extensions_Selenium2TestCase_Element;
     }
 
     public function httpMethod()

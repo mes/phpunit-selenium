@@ -4,4 +4,13 @@ build/coverage
 build/logs
 build/pdepend
 phpunit.xml
+vendor/*
+composer.phar
+selenium-server-*.jar
 Tests/Selenium2TestCase/Coverage/*.dummyTestId
+firefox.tar.bz2
+firefox/
+*.php~
+/.project
+/.buildpath
+/.settings

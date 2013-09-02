@@ -1,8 +1,8 @@
 <?php
-/* PHPUnit.
- * This script enables PHPUnit to run from a git checkout.
+/**
+ * PHPUnit
  *
- * Copyright (c) 2002-2011, Sebastian Bergmann <sebastian@phpunit.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,22 +33,29 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
  * ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
+ *
+ * @package    PHPUnit_Selenium
+ * @author     Julian Seeger <seeger.julian@gmail.com>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
+ * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
+ * @link       http://www.phpunit.de/
  */
 
-$dir = dirname(__FILE__);
-$vendor = $dir . '/vendor/';
-set_include_path(implode(PATH_SEPARATOR, array(
-$dir,
-$vendor . 'phpunit/',
-$vendor . 'php-code-coverage/',
-$vendor . 'php-file-iterator/',
-$vendor . 'php-text-template/',
-$vendor . 'phpunit-mock-objects/',
-$vendor . 'php-token-stream/',
-$vendor . 'dbunit/',
-$vendor . 'phpunit-story/',
-$vendor . 'php-timer/',
-$vendor . 'php-invoker/',
-get_include_path()
-)));
-require $vendor . 'phpunit/phpunit.php';
+/**
+ * @package    PHPUnit_Selenium
+ * @author     Julian Seeger <seeger.julian@gmail.com>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
+ * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
+ * @link       http://www.phpunit.de/
+ */
+class Tests_Selenium2TestCase_SetUpPageTest extends Tests_Selenium2TestCase_BaseTestCase {
+    public function setUpPage()
+    {
+        $this->url('html/test_type_page1.html');
+    }
+
+    public function testSetUpPageIsExecuted()
+    {
+        $this->assertRegExp('/html\/test_type_page1\.html$/', $this->url());
+    }
+}

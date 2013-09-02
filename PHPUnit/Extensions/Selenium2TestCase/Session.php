@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2010-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2010-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.2.0
@@ -47,7 +47,7 @@
  *
  * @package    PHPUnit_Selenium
  * @author     Giorgio Sironi <info@giorgiosironi.com>
- * @copyright  2010-2011 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @copyright  2010-2013 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @version    Release: @package_version@
  * @link       http://www.phpunit.de/
@@ -56,10 +56,12 @@
  * @method mixed alertText($value = NULL) Gets the alert dialog text, or sets the text for a prompt dialog
  * @method void back()
  * @method void dismissAlert() Press Cancel on an alert, or does not confirm a dialog
+ * @method void doubleclick() Double-clicks at the current mouse coordinates (set by moveto).
  * @method string execute(array $javaScriptCode) Injects arbitrary JavaScript in the page and returns the last. See unit tests for usage
  * @method string executeAsync(array $javaScriptCode) Injects arbitrary JavaScript and wait for the callback (last element of arguments) to be called. See unit tests for usage
  * @method void forward()
- * @method void frame($elementId) Changes the focus to a frame in the page
+ * @method void frame(mixed $element) Changes the focus to a frame in the page (by frameCount of type int, htmlId of type string, htmlName of type string or element of type \PHPUnit_Extensions_Selenium2TestCase_Element)
+ * @method void moveto(\PHPUnit_Extensions_Selenium2TestCase_Element $element) Move the mouse by an offset of the specificed element.
  * @method void refresh()
  * @method string source() Returns the HTML source of the page
  * @method string title()
@@ -71,7 +73,7 @@
  * @method string file($localPath) Uploads a file to the remote server and returns the location on the remote server. The remote path may then be used as the value of a file input field.
  */
 class PHPUnit_Extensions_Selenium2TestCase_Session
-    extends PHPUnit_Extensions_Selenium2TestCase_CommandsHolder
+    extends PHPUnit_Extensions_Selenium2TestCase_Element_Accessor
 {
     /**
      * @var string  the base URL for this session,
@@ -114,9 +116,11 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
             'acceptAlert' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_AcceptAlert',
             'alertText' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_AlertText',
             'back' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
+            'click' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_Click',
             'buttondown' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
             'buttonup' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
             'dismissAlert' => 'PHPUnit_Extensions_Selenium2TestCase_SessionCommand_DismissAlert',
+            'doubleclick' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
             'execute' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
             'executeAsync' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
             'forward' => 'PHPUnit_Extensions_Selenium2TestCase_ElementCommand_GenericPost',
@@ -174,105 +178,16 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
         if ($this->stopped) {
             return;
         }
-        $this->driver->curl('DELETE', $this->url);
-        $this->stopped = TRUE;
-    }
-
-    /**
-     * @param string $value     e.g. 'container'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byClassName($value)
-    {
-        return $this->by('class name', $value);
-    }
-
-    /**
-     * @param string $value     e.g. 'div.container'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byCssSelector($value)
-    {
-        return $this->by('css selector', $value);
-    }
-
-    /**
-     * @param string $value     e.g. 'uniqueId'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byId($value)
-    {
-        return $this->by('id', $value);
-    }
-
-    /**
-     * @param string $value     e.g. 'email_address'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byName($value)
-    {
-        return $this->by('name', $value);
-    }
-
-    /**
-     * @param string $value     e.g. '/div[@attribute="value"]'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byXPath($value)
-    {
-        return $this->by('xpath', $value);
-    }
-
-    /**
-     * @param string $value     e.g. 'Link text'
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function byLinkText($value)
-    {
-        return $this->by('link text', $value);
-    }
-
-    /**
-     * @param string $strategy     supported by JsonWireProtocol element/ command
-     * @param string $value
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    protected function by($strategy, $value)
-    {
-        return $this->element($this->using($strategy)->value($value));
-    }
-
-    /**
-     * @param string $strategy
-     * @return PHPUnit_Extensions_Selenium2TestCase_ElementCriteria
-     */
-    public function using($strategy)
-    {
-        return new PHPUnit_Extensions_Selenium2TestCase_ElementCriteria($strategy);
-    }
-
-    /**
-     * @return PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function element(PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria)
-    {
-        $value = $this->postCommand('element', $criteria);
-        return PHPUnit_Extensions_Selenium2TestCase_Element::fromResponseValue($value,
-                                                                               $this->url->descend('element'),
-                                                                               $this->driver);
-    }
-
-    /**
-     * @return array    instances of PHPUnit_Extensions_Selenium2TestCase_Element
-     */
-    public function elements(PHPUnit_Extensions_Selenium2TestCase_ElementCriteria $criteria)
-    {
-        $values = $this->postCommand('elements', $criteria);
-        $elements = array();
-        foreach ($values as $value) {
-            $elements[] = PHPUnit_Extensions_Selenium2TestCase_Element::fromResponseValue($value, $this->url->descend('element'), $this->driver);
+        try {
+            $this->driver->curl('DELETE', $this->url);
+        } catch (Exception $e) {
+            // sessions which aren't closed because of sharing can time out on the server. In no way trying to close them should make a test fail, as it already finished before arriving here.
+            "Closing sessions: " . $e->getMessage() . "\n";
         }
-        return $elements;
+        $this->stopped = TRUE;
+        if ($this->stopped) {
+            return;
+        }
     }
 
     /**
@@ -285,6 +200,15 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
             throw new InvalidArgumentException("The element is not a `select` tag but a `$tag`.");
         }
         return PHPUnit_Extensions_Selenium2TestCase_Element_Select::fromElement($element);
+    }
+
+    /**
+     * @param array   WebElement JSON object
+     * @return PHPUnit_Extensions_Selenium2TestCase_Element
+     */
+    public function elementFromResponseValue($value)
+    {
+        return PHPUnit_Extensions_Selenium2TestCase_Element::fromResponseValue($value, $this->getSessionUrl()->descend('element'), $this->driver);
     }
 
     /**
@@ -314,7 +238,7 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
      */
     public function currentWindow()
     {
-        $url = $this->url->descend('window')->descend($this->windowHandle());
+        $url = $this->url->descend('window')->descend(trim($this->windowHandle(), '{}'));
         return new PHPUnit_Extensions_Selenium2TestCase_Window($this->driver, $url);
     }
 

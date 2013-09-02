@@ -3,7 +3,38 @@ PHPUnit_Selenium 1.2
 
 This is the list of changes for the PHPUnit_Selenium 1.2 release series.
 
-PHPUnit_Selenium 1.2.10
+PHPUnit_Selenium 1.3.2
+----------------------
+
+* Compatibility with Selenium 2.34 and upper
+* Introduced experimental file() support
+
+PHPUnit_Selenium 1.3.1
+----------------------
+
+* setupPage() method that can be defined to be executed after the session is opened but before tests start
+* Docblocks work now in Eclipse PDT
+
+PHPUnit_Selenium 1.3.0
+----------------------
+
+* BC break: setBrowserUrl() argument is not loaded at the start of a test
+* waitUntil() now works nicely with implicitWait()
+* keysHolder() is deprecated, use keys() instead
+* More complete frame() supportk
+* Research of elements inside other element objects with by*() methods
+* Supporting Selenium 2.32.0
+* Element names are always lowercase for consistency
+* Pause support for runSelenese() HTML cases
+
+
+PHPUnit_Selenium 1.2.12
+----------------------
+
+* Added waitUntil(), byTag()
+* Added specialKeys() for non-alphanumeric keys
+
+PHPUnit_Selenium 1.2.11
 ----------------------
 
 * Fixing Composer autoload support.

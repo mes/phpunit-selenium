@@ -2,7 +2,7 @@
 /**
  * PHPUnit
  *
- * Copyright (c) 2002-2011, Sebastian Bergmann <sb@sebastian-bergmann.de>.
+ * Copyright (c) 2002-2013, Sebastian Bergmann <sebastian@phpunit.de>.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * @package    PHPUnit_Selenium
- * @author     Sebastian Bergmann <sb@sebastian-bergmann.de>
- * @copyright  2002-2010 Sebastian Bergmann <sb@sebastian-bergmann.de>
+ * @author     Sebastian Bergmann <sebastian@phpunit.de>
+ * @copyright  2002-2010 Sebastian Bergmann <sebastian@phpunit.de>
  * @license    http://www.opensource.org/licenses/BSD-3-Clause  The BSD 3-Clause License
  * @link       http://www.phpunit.de/
  * @since      File available since Release 1.1.0
@@ -56,6 +56,7 @@ spl_autoload_register(
             'phpunit_extensions_selenium2testcase_commandsholder' => '/Extensions/Selenium2TestCase/CommandsHolder.php',
             'phpunit_extensions_selenium2testcase_driver' => '/Extensions/Selenium2TestCase/Driver.php',
             'phpunit_extensions_selenium2testcase_element' => '/Extensions/Selenium2TestCase/Element.php',
+            'phpunit_extensions_selenium2testcase_element_accessor' => '/Extensions/Selenium2TestCase/Element/Accessor.php',
             'phpunit_extensions_selenium2testcase_element_select' => '/Extensions/Selenium2TestCase/Element/Select.php',
             'phpunit_extensions_selenium2testcase_elementcommand_attribute' => '/Extensions/Selenium2TestCase/ElementCommand/Attribute.php',
             'phpunit_extensions_selenium2testcase_elementcommand_click' => '/Extensions/Selenium2TestCase/ElementCommand/Click.php',
@@ -66,6 +67,8 @@ spl_autoload_register(
             'phpunit_extensions_selenium2testcase_elementcommand_value' => '/Extensions/Selenium2TestCase/ElementCommand/Value.php',
             'phpunit_extensions_selenium2testcase_elementcriteria' => '/Extensions/Selenium2TestCase/ElementCriteria.php',
             'phpunit_extensions_selenium2testcase_exception' => '/Extensions/Selenium2TestCase/Exception.php',
+            'phpunit_extensions_selenium2testcase_keys' => '/Extensions/Selenium2TestCase/Keys.php',
+            'phpunit_extensions_selenium2testcase_keysholder' => '/Extensions/Selenium2TestCase/KeysHolder.php',
             'phpunit_extensions_selenium2testcase_noseleniumexception' => '/Extensions/Selenium2TestCase/NoSeleniumException.php',
             'phpunit_extensions_selenium2testcase_webdriverexception' => '/Extensions/Selenium2TestCase/WebDriverException.php',
             'phpunit_extensions_selenium2testcase_response' => '/Extensions/Selenium2TestCase/Response.php',
@@ -77,6 +80,7 @@ spl_autoload_register(
             'phpunit_extensions_selenium2testcase_session_timeouts' => '/Extensions/Selenium2TestCase/Session/Timeouts.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_acceptalert' => '/Extensions/Selenium2TestCase/SessionCommand/AcceptAlert.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_alerttext' => '/Extensions/Selenium2TestCase/SessionCommand/AlertText.php',
+            'phpunit_extensions_selenium2testcase_sessioncommand_click' => '/Extensions/Selenium2TestCase/SessionCommand/Click.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_dismissalert' => '/Extensions/Selenium2TestCase/SessionCommand/DismissAlert.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_frame' => '/Extensions/Selenium2TestCase/SessionCommand/Frame.php',
             'phpunit_extensions_selenium2testcase_sessioncommand_genericaccessor' => '/Extensions/Selenium2TestCase/SessionCommand/GenericAccessor.php',
@@ -93,9 +97,12 @@ spl_autoload_register(
             'phpunit_extensions_selenium2testcase_sessionstrategy_shared' => '/Extensions/Selenium2TestCase/SessionStrategy/Shared.php',
             'phpunit_extensions_selenium2testcase_statecommand' => '/Extensions/Selenium2TestCase/StateCommand.php',
             'phpunit_extensions_selenium2testcase_url' => '/Extensions/Selenium2TestCase/URL.php',
+            'phpunit_extensions_selenium2testcase_waituntil' => '/Extensions/Selenium2TestCase/WaitUntil.php',
+            'phpunit_extensions_selenium2testcase_webdriverexception' => '/Extensions/Selenium2TestCase/WebDriverException.php',
             'phpunit_extensions_selenium2testcase_window' => '/Extensions/Selenium2TestCase/Window.php',
             'phpunit_extensions_seleniumbrowsersuite' => '/Extensions/SeleniumBrowserSuite.php',
             'phpunit_extensions_seleniumcommon_remotecoverage' => '/Extensions/SeleniumCommon/RemoteCoverage.php',
+            'phpunit_extensions_seleniumcommon_exithandler' => '/Extensions/SeleniumCommon/ExitHandler.php',
             'phpunit_extensions_seleniumtestcase' => '/Extensions/SeleniumTestCase.php',
             'phpunit_extensions_seleniumtestcase_driver' => '/Extensions/SeleniumTestCase/Driver.php',
             'phpunit_extensions_seleniumtestsuite' => '/Extensions/SeleniumTestSuite.php'
