@@ -183,6 +183,7 @@ class PHPUnit_Extensions_Selenium2TestCase_Session
         $this->stopped = TRUE;
         if ($this->stopped) {
             return;
+        }
     }
 
     /**
